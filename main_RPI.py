@@ -4,7 +4,6 @@ import sqlite3
 import numpy as np
 import sounddevice as sd
 from sklearn.metrics.pairwise import cosine_similarity
-from pyannote.audio import Model
 from pyannote.audio import Inference
 import argparse
 import torchaudio
@@ -15,9 +14,9 @@ from collections import defaultdict
 from pathlib import Path
 import pyaudio
 import wave
+from pyannote.audio import Model
 
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-HF_TOKEN = "YOUR_HF_TOKEN_HERE"
 
 
 def record():
@@ -26,8 +25,8 @@ def record():
     CHANNELS = 1                  # Mono
     RATE = 44100                  # 44.1kHz sampling rate
     CHUNK = 4096                  # Buffer size
-    RECORD_SECONDS = 5            # Duration of recording
-    DEVICE_INDEX = 2              # Change this to your mic's device index
+    RECORD_SECONDS = 10            # Duration of recording
+    DEVICE_INDEX = 3              # Change this to your mic's device index
     OUTPUT_FILENAME = "output.wav"
 
     # Initialize PyAudio
@@ -66,7 +65,7 @@ def record():
     wf.setframerate(RATE)
     wf.writeframes(b''.join(frames))
     wf.close()
-    return os.path.join(os.getcwd, "output.wav")
+    return os.path.join(os.getcwd(), r"output.wav")
 
 
 def init_db():
@@ -101,7 +100,7 @@ def get_device():
 @lru_cache(maxsize=1)
 def get_diarization_pipeline():
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1",
-                                       use_auth_token=HF_TOKEN)
+                                       use_auth_token="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")
     device = get_device()
     try:
         pipeline.to(device)
@@ -121,8 +120,7 @@ def get_whisperx_model():
 
 @lru_cache(maxsize=1)
 def get_embedding_model():
-    Model_ = Model.from_pretrained("pyannote/embedding",
-                                       use_auth_token=HF_TOKEN)
+    model_ = Model.from_pretrained("pyannote/embedding",use_auth_token="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")
     device = get_device()
     model = Inference("pyannote/embedding", window="whole", device=device)
     return model
@@ -337,14 +335,15 @@ def process_audio(file_path, db):
 
 def main():
     parser = argparse.ArgumentParser(description="Speaker Diarization and Transcription CLI")
-    parser.add_argument("--input", required=False, help="Path to the input audio file")
+    audio_pth = record()
+#     parser.add_argument("--input", required=False, help="Path to the input audio file")
     parser.add_argument("--output", default="transcript.txt", help="Path to the output transcript file")
     args = parser.parse_args()
     db = init_db()
-    if parser.add_argument("--input") :    
-        audio_pth = args.input
-    else:
-        audio_pth = record()
+#     if parser.add_argument("--input") :    
+#         audio_pth = args.input
+#     else:
+#         audio_pth = record()
 
     diarization, transcript, unknown_speakers, audio, sr = process_audio(audio_pth, db)
     updated_profiles = tag_unknown_speakers(unknown_speakers, db, audio, sr)
@@ -357,3 +356,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
