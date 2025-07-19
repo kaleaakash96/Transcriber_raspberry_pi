@@ -32,7 +32,8 @@ For a visual representation of how the system processes audio files:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/pat229988/Transcriber.git
+   # git clone https://github.com/pat229988/Transcriber.git
+   git clone https://github.com/kaleaakash96/Transcriber_raspberry_pi.git
    cd Transcriber
    ```
 
